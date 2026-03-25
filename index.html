@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIVOX — Sua equipe de IA. Pronta agora.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & BASE ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --black:   #060608;
+  --off:     #0d0d10;
+  --surface: #111116;
+  --border:  #1e1e26;
+  --muted:   #4a4a5e;
+  --text:    #e8e8f0;
+  --white:   #f4f4f8;
+  --lime:    #c8ff47;
+  --lime2:   #a8e832;
+  --gold:    #f0b429;
+  --radius:  4px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--black);
+  color: var(--text);
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  cursor: none;
+  overflow-x: hidden;
+}
+
+/* ── CURSOR ───────────────────────────────────────────────────── */
+.cursor {
+  position: fixed;
+  width: 10px; height: 10px;
+  background: var(--lime);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s ease, height 0.2s ease;
+  mix-blend-mode: difference;
+}
+.cursor-ring {
+  position: fixed;
+  width: 36px; height: 36px;
+  border: 1.5px solid rgba(200,255,71,0.4);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  transition: width 0.25s ease, height 0.25s ease;
+}
+
+/* ── NOISE TEXTURE ────────────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── GRID BACKGROUND ──────────────────────────────────────────── */
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(200,255,71,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200,255,71,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── NAV ──────────────────────────────────────────────────────── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 24px 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to bottom, rgba(6,6,8,0.95), transparent);
+  transition: background 0.3s, backdrop-filter 0.3s;
+}
+.nav-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 4px;
+  color: var(--white);
+  text-decoration: none;
+}
+.nav-logo span { color: var(--lime); }
+.nav-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--black);
+  background: var(--lime);
+  border: none;
+  padding: 10px 24px;
+  border-radius: var(--radius);
+  cursor: none;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.2s, transform 0.2s;
+  display: inline-block;
+}
+.nav-btn:hover { background: var(--lime2); transform: translateY(-1px); }
+
+/* ── SECTIONS WRAPPER ─────────────────────────────────────────── */
+section { position: relative; z-index: 1; }
+
+/* ── HERO ─────────────────────────────────────────────────────── */
+#hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 140px 48px 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--lime);
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.2s forwards;
+}
+.hero-eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 32px; height: 1px;
+  background: var(--lime);
+}
+
+.hero-headline {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(72px, 11vw, 160px);
+  line-height: 0.92;
+  letter-spacing: -1px;
+  color: var(--white);
+  max-width: 900px;
+  opacity: 0;
+  animation: fadeUp 0.9s 0.35s forwards;
+}
+.hero-headline em {
+  font-style: normal;
+  color: var(--lime);
+  display: inline-block;
+  position: relative;
+}
+.hero-headline em::after {
+  content: '';
+  position: absolute;
+  bottom: 6px; left: 0; right: 0;
+  height: 3px;
+  background: var(--lime);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: lineIn 0.6s 1.2s forwards;
+}
+
+.hero-sub {
+  margin-top: 40px;
+  font-size: 18px;
+  font-weight: 400;
+  color: rgba(232,232,240,0.6);
+  max-width: 520px;
+  line-height: 1.7;
+  opacity: 0;
+  animation: fadeUp 0.9s 0.5s forwards;
+}
+
+.hero-actions {
+  margin-top: 52px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  opacity: 0;
+  animation: fadeUp 0.9s 0.65s forwards;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--black);
+  background: var(--lime);
+  border: none;
+  padding: 16px 36px;
+  border-radius: var(--radius);
+  cursor: none;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 0 40px rgba(200,255,71,0.2);
+}
+.btn-primary:hover {
+  background: var(--lime2);
+  transform: translateY(-2px);
+  box-shadow: 0 0 60px rgba(200,255,71,0.35);
+}
+.btn-primary:hover svg { transform: translateY(2px); }
+.btn-primary svg { transition: transform 0.2s; }
+
+.btn-secondary {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-secondary:hover { color: var(--text); }
+
+/* glow orb */
+.hero-orb {
+  position: absolute;
+  right: -200px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 700px; height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(200,255,71,0.07) 0%, transparent 70%);
+  pointer-events: none;
+  animation: orbPulse 6s ease-in-out infinite;
+}
+
+/* ── STATS BAR ────────────────────────────────────────────────── */
+#stats {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 40px 48px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  background: var(--off);
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.stat-number {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 52px;
+  line-height: 1;
+  color: var(--lime);
+  letter-spacing: 1px;
+}
+.stat-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ── SECTION LABELS ───────────────────────────────────────────── */
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--lime);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-label::before {
+  content: '';
+  display: inline-block;
+  width: 24px; height: 1px;
+  background: var(--lime);
+}
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(40px, 5vw, 72px);
+  line-height: 1;
+  color: var(--white);
+  margin-bottom: 16px;
+}
+.section-sub {
+  font-size: 16px;
+  color: rgba(232,232,240,0.5);
+  max-width: 480px;
+  line-height: 1.7;
+}
+
+/* ── AGENTS ───────────────────────────────────────────────────── */
+#agents {
+  padding: 100px 48px;
+}
+.agents-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 56px;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+.agents-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+}
+.agent-card {
+  background: var(--surface);
+  padding: 32px;
+  border-top: 2px solid transparent;
+  transition: border-color 0.25s, background 0.25s, transform 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+.agent-card:hover {
+  border-color: var(--lime);
+  background: #15151c;
+  transform: translateY(-3px);
+  z-index: 2;
+}
+.agent-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(200,255,71,0.05) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.agent-card:hover::after { opacity: 1; }
+
+.agent-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+.agent-icon {
+  width: 40px; height: 40px;
+  margin-bottom: 18px;
+  color: var(--lime);
+  opacity: 0.8;
+}
+.agent-name {
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.agent-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.agent-card.featured {
+  background: linear-gradient(135deg, #12120f 0%, #1a1a10 100%);
+  border-top-color: var(--gold);
+}
+.agent-card.featured .agent-icon { color: var(--gold); }
+.agent-card.featured .agent-num { color: var(--gold); opacity: 0.6; }
+.agent-card.featured:hover { border-color: var(--gold); }
+
+/* ── HOW IT WORKS ─────────────────────────────────────────────── */
+#how {
+  padding: 100px 48px;
+  background: var(--off);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.how-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+.steps {
+  display: flex;
+  flex-direction: column;
+  margin-top: 48px;
+}
+.step {
+  display: flex;
+  gap: 24px;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--border);
+}
+.step:last-child { border-bottom: none; }
+.step-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 48px;
+  line-height: 1;
+  color: var(--border);
+  min-width: 48px;
+  transition: color 0.3s;
+}
+.step:hover .step-num { color: var(--lime); }
+.step-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+.step-text {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+/* terminal */
+.terminal {
+  background: #0a0a0c;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+}
+.terminal-bar {
+  background: #141418;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot.r { background: #ff5f57; }
+.dot.y { background: #febc2e; }
+.dot.g { background: #28c840; }
+.terminal-title {
+  margin-left: auto;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+.terminal-body {
+  padding: 28px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  line-height: 2;
+}
+.t-line { display: flex; align-items: baseline; gap: 10px; }
+.t-prompt { color: var(--lime); user-select: none; }
+.t-cmd { color: var(--text); }
+.t-output { color: rgba(232,232,240,0.4); padding-left: 20px; font-size: 12px; }
+.t-success { color: var(--lime); padding-left: 20px; font-size: 12px; }
+.t-gap { height: 8px; }
+.t-cursor {
+  display: inline-block;
+  width: 7px; height: 13px;
+  background: var(--lime);
+  margin-left: 4px;
+  vertical-align: middle;
+  animation: blink 1s infinite;
+}
+
+/* ── WHY AIVOX ────────────────────────────────────────────────── */
+#why { padding: 100px 48px; }
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+  margin-top: 60px;
+}
+.why-card {
+  padding: 36px 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.25s, transform 0.25s;
+}
+.why-card:hover {
+  border-color: rgba(200,255,71,0.3);
+  transform: translateY(-4px);
+}
+.why-icon {
+  width: 48px; height: 48px;
+  background: rgba(200,255,71,0.08);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  font-size: 22px;
+}
+.why-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 10px;
+}
+.why-text {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* ── CTA FINAL ────────────────────────────────────────────────── */
+#cta {
+  padding: 120px 48px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+#cta::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 800px; height: 400px;
+  background: radial-gradient(ellipse, rgba(200,255,71,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.cta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--lime);
+  background: rgba(200,255,71,0.08);
+  border: 1px solid rgba(200,255,71,0.2);
+  padding: 6px 16px;
+  border-radius: 100px;
+  margin-bottom: 32px;
+}
+.cta-badge::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--lime);
+  animation: pulseDot 2s infinite;
+}
+.cta-headline {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(48px, 7vw, 96px);
+  line-height: 0.95;
+  color: var(--white);
+  margin-bottom: 24px;
+}
+.cta-headline span { color: var(--lime); }
+.cta-sub {
+  font-size: 17px;
+  color: rgba(232,232,240,0.5);
+  max-width: 440px;
+  margin: 0 auto 48px;
+  line-height: 1.7;
+}
+.btn-primary.large { font-size: 16px; padding: 18px 44px; }
+.cta-note {
+  margin-top: 24px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+.cta-note a { color: rgba(200,255,71,0.6); text-decoration: none; transition: color 0.2s; }
+.cta-note a:hover { color: var(--lime); }
+
+/* ── PRICING ──────────────────────────────────────────────────── */
+#pricing {
+  padding: 120px 48px;
+  text-align: center;
+}
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  max-width: 1060px;
+  margin: 64px auto 0;
+  align-items: start;
+}
+.pricing-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 40px 36px;
+  text-align: left;
+  transition: border-color 0.3s, transform 0.3s;
+  position: relative;
+}
+.pricing-card:hover {
+  border-color: rgba(200,255,71,0.3);
+  transform: translateY(-4px);
+}
+.pricing-card.featured {
+  border-color: var(--lime);
+  box-shadow: 0 0 60px rgba(200,255,71,0.1), inset 0 0 60px rgba(200,255,71,0.02);
+}
+.pricing-card.founder {
+  border-color: var(--gold);
+  box-shadow: 0 0 60px rgba(240,180,41,0.08);
+  background: linear-gradient(135deg, #111116 0%, #13120c 100%);
+}
+.pricing-card.founder:hover { border-color: var(--gold); }
+.plan-badge {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 100px;
+  margin-bottom: 28px;
+}
+.plan-badge.green { color: var(--lime); background: rgba(200,255,71,0.08); border: 1px solid rgba(200,255,71,0.2); }
+.plan-badge.gold  { color: var(--gold); background: rgba(240,180,41,0.08); border: 1px solid rgba(240,180,41,0.25); }
+.plan-badge.muted { color: var(--muted); background: rgba(255,255,255,0.04); border: 1px solid var(--border); }
+.plan-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  letter-spacing: 2px;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+.plan-price {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 56px;
+  line-height: 1;
+  color: var(--lime);
+  margin-bottom: 4px;
+}
+.pricing-card.founder .plan-price { color: var(--gold); }
+.plan-period {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin-bottom: 32px;
+}
+.plan-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin-bottom: 28px;
+}
+.plan-features {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 36px;
+}
+.plan-features li {
+  font-size: 14px;
+  color: rgba(232,232,240,0.75);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.5;
+}
+.plan-features li::before {
+  content: '→';
+  color: var(--lime);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.pricing-card.founder .plan-features li::before { color: var(--gold); }
+.plan-features li.muted-feat { color: var(--muted); }
+.plan-features li.muted-feat::before { color: #2a2a38; }
+.plan-cta {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 14px 24px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  cursor: none;
+}
+.plan-cta.primary {
+  background: var(--lime);
+  color: var(--black);
+}
+.plan-cta.primary:hover {
+  background: var(--lime2);
+  transform: translateY(-1px);
+  box-shadow: 0 0 30px rgba(200,255,71,0.25);
+}
+.plan-cta.gold-btn {
+  background: var(--gold);
+  color: var(--black);
+}
+.plan-cta.gold-btn:hover {
+  background: #d89e20;
+  transform: translateY(-1px);
+  box-shadow: 0 0 30px rgba(240,180,41,0.3);
+}
+.plan-cta.outline {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.plan-cta.outline:hover {
+  border-color: rgba(232,232,240,0.3);
+  transform: translateY(-1px);
+}
+.founder-scarcity {
+  text-align: center;
+  margin-top: 20px;
+}
+.scarcity-bar-wrap {
+  background: rgba(255,255,255,0.05);
+  border-radius: 100px;
+  height: 4px;
+  margin: 8px auto;
+  max-width: 220px;
+  overflow: hidden;
+}
+.scarcity-bar {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 100px;
+  width: 20%;
+  transition: width 1s ease;
+}
+.scarcity-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--gold);
+  opacity: 0.7;
+}
+.pricing-note {
+  margin-top: 48px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+
+/* ── FOOTER ───────────────────────────────────────────────────── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 32px 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.footer-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 4px;
+  color: var(--white);
+}
+.footer-logo span { color: var(--lime); }
+.footer-links { display: flex; gap: 28px; }
+.footer-links a {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--text); }
+.footer-credit {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #2a2a38;
+}
+
+/* ── ANIMATIONS ───────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes lineIn {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+@keyframes orbPulse {
+  0%, 100% { opacity: 0.6; transform: translateY(-50%) scale(1); }
+  50%       { opacity: 1;   transform: translateY(-50%) scale(1.05); }
+}
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+/* ── SCROLL REVEALS ───────────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ── RESPONSIVE ───────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  nav { padding: 20px 24px; }
+  #hero { padding: 120px 24px 60px; }
+  #stats { grid-template-columns: repeat(2, 1fr); padding: 40px 24px; }
+  #agents { padding: 60px 24px; }
+  .agents-grid { grid-template-columns: repeat(2, 1fr); }
+  #how { padding: 60px 24px; }
+  .how-inner { grid-template-columns: 1fr; gap: 48px; }
+  #why { padding: 60px 24px; }
+  .why-grid { grid-template-columns: 1fr; gap: 20px; }
+  #cta { padding: 80px 24px; }
+  footer { padding: 24px; flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 600px) {
+  .agents-grid { grid-template-columns: 1fr; }
+  .agents-header { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="grid-bg"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a class="nav-logo" href="#"><span>AI</span>VOX</a>
+  <a class="nav-btn" href="#pricing">Ver Planos</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-orb"></div>
+  <div class="hero-eyebrow">Sistema de Agentes de IA</div>
+  <h1 class="hero-headline">
+    Sua equipe<br>
+    de <em>especialistas</em><br>
+    já está pronta.
+  </h1>
+  <p class="hero-sub">
+    9 agentes de IA trabalhando juntos para criar, analisar, vender e escalar qualquer marca — dentro do Claude Code, sem servidor, sem custo de infraestrutura.
+  </p>
+  <div class="hero-actions">
+    <a class="btn-primary" href="#pricing">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L1 8h4v6h6V8h4L8 1z" fill="currentColor"/></svg>
+      Ver Planos e Preços
+    </a>
+    <a class="btn-secondary" href="#agents">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M7 4v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Ver os agentes
+    </a>
+  </div>
+</section>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="stat reveal">
+    <div class="stat-number">09</div>
+    <div class="stat-label">Agentes especializados</div>
+  </div>
+  <div class="stat reveal">
+    <div class="stat-number">∞</div>
+    <div class="stat-label">Marcas atendidas simultaneamente</div>
+  </div>
+  <div class="stat reveal">
+    <div class="stat-number">R$0</div>
+    <div class="stat-label">Custo de infraestrutura</div>
+  </div>
+  <div class="stat reveal">
+    <div class="stat-number">1</div>
+    <div class="stat-label">Comando para ativar tudo</div>
+  </div>
+</section>
+
+<!-- AGENTS -->
+<section id="agents">
+  <div class="agents-header">
+    <div>
+      <div class="section-label reveal">Os agentes</div>
+      <h2 class="section-title reveal">9 especialistas.<br>1 sistema.</h2>
+    </div>
+    <p class="section-sub reveal">Cada agente tem uma função precisa e se conecta aos demais automaticamente. Você faz o pedido — eles executam.</p>
+  </div>
+
+  <div class="agents-grid">
+    <div class="agent-card featured reveal">
+      <div class="agent-num">06 — CEO</div>
+      <div class="agent-icon">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="1.5"/><path d="M14 20h12M20 14v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="20" cy="20" r="4" fill="currentColor" opacity="0.3"/></svg>
+      </div>
+      <div class="agent-name">CEO Advisor Agent</div>
+      <div class="agent-desc">O orquestrador central. Único ponto de contato. Analisa, decide e aciona os agentes certos para cada demanda da sua marca — 24h por sessão.</div>
+    </div>
+
+    <div class="agent-card reveal">
+      <div class="agent-num">02</div>
+      <div class="agent-icon">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="6" y="8" width="28" height="20" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M13 32h14M20 28v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M11 14h18M11 19h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="agent-name">Frontend Design Agent</div>
+      <div class="agent-desc">Landing pages, sites e interfaces com identidade visual única — sem aparência genérica de IA. Pronto para produção.</div>
+    </div>
+
+    <div class="agent-card reveal">
+      <div class="agent-num">04</div>
+      <div class="agent-icon">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M8 12h24M8 18h16M8 24h20M8 30h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="agent-name">Copy & Paid Ads Agent</div>
+      <div class="agent-desc">Headlines, CTAs e body copy de alta conversão. Frameworks PAS, BAB, Schwartz. Meta, Google e TikTok.</div>
+    </div>
+
+    <div class="agent-card reveal">
+      <div class="agent-num">03</div>
+      <div class="agent-icon">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M10 6h14l8 8v22H10V6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M24 6v8h8" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M14 18h12M14 23h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="agent-name">PDF Processing Agent</div>
+      <div class="agent-desc">Lê qualquer PDF e entrega resumo executivo, briefing ou plano de ação. O ponto de entrada de todo projeto.</div>
+    </div>
+
+    <div class="agent-card reveal">
+      <div class="agent-num">05</div>
+      <div class="agent-icon">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M20 8v8M28 12l-5.6 5.6M32 20h-8M28 28l-5.6-5.6M20 32v-8M12 28l5.6-5.6M8 20h8M12 12l5.6 5.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="20" cy="20" r="4" fill="currentColor" opacity="0.3"/></svg>
+      </div>
+      <div class="agent-name">Strategy Advisor Agent</div>
+      <div class="agent-desc">5 Forças de Porter, Blue Ocean, PDCA. Estudos de caso, estratégia competitiva e plano de ação priorizado.</div>
+    </div>
+
+    <div class="agent-card reveal">
+      <div class="agent-num">08</div>
+      <div class="agent-icon">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M8 28l8-8 6 6 10-14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="10" r="3" fill="currentColor" opacity="0.4"/></svg>
+      </div>
+      <div class="agent-name">Paid Traffic Agent</div>
+      <div class="agent-desc">Cria e otimiza campanhas via Meta Ads, Google Ads e TikTok API. Zero alteração em campanha ativa sem aprovação.</div>
+    </div>
+
+    <div class="agent-card reveal">
+      <div class="agent-num">01</div>
+      <div class="agent-icon">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="6" y="8" width="28" height="22" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M16 17l10 5-10 5V17z" fill="currentColor" opacity="0.5"/></svg>
+      </div>
+      <div class="agent-name">Promo Video Agent</div>
+      <div class="agent-desc">Vídeos promocionais gerados por IA via Sora (OpenAI). Briefing em texto, vídeo na saída.</div>
+    </div>
+
+    <div class="agent-card reveal">
+      <div class="agent-num">07</div>
+      <div class="agent-icon">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M8 14h24v20H8V14z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M14 14V10a6 6 0 0112 0v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="20" cy="24" r="3" fill="currentColor" opacity="0.4"/></svg>
+      </div>
+      <div class="agent-name">E-commerce Integration</div>
+      <div class="agent-desc">Integração com Shopify e Nuvemshop via API ou tema personalizado. Do design ao ar em uma sessão.</div>
+    </div>
+
+    <div class="agent-card reveal">
+      <div class="agent-num">09</div>
+      <div class="agent-icon">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><ellipse cx="20" cy="14" rx="12" ry="5" stroke="currentColor" stroke-width="1.5"/><path d="M8 14v6c0 2.76 5.37 5 12 5s12-2.24 12-5v-6" stroke="currentColor" stroke-width="1.5"/><path d="M8 20v6c0 2.76 5.37 5 12 5s12-2.24 12-5v-6" stroke="currentColor" stroke-width="1.5"/></svg>
+      </div>
+      <div class="agent-name">Database Architect</div>
+      <div class="agent-desc">Schema SQL, migrations e arquitetura de banco para escalar o AIVOX para múltiplos clientes com segurança total.</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="how-inner">
+    <div>
+      <div class="section-label reveal">Como funciona</div>
+      <h2 class="section-title reveal">De zero ao<br>primeiro resultado<br>em minutos.</h2>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <div class="step-title">Baixe e configure</div>
+            <div class="step-text">Clone o repositório, configure sua chave OpenAI no .env e instale as dependências com um comando.</div>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <div class="step-title">Abra o Claude Code</div>
+            <div class="step-text">Inicie o Claude Code dentro da pasta do AIVOX. É onde todos os agentes operam — sem servidor, sem deploy.</div>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <div class="step-title">Digite /play-aivox</div>
+            <div class="step-text">O CEO Advisor inicia, verifica o sistema e conduz o onboarding completo da sua marca. O time está pronto.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="terminal reveal">
+      <div class="terminal-bar">
+        <div class="dot r"></div>
+        <div class="dot y"></div>
+        <div class="dot g"></div>
+        <div class="terminal-title">aivox — claude code</div>
+      </div>
+      <div class="terminal-body">
+        <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd">git clone github.com/arthurr7070/AIVOX</span></div>
+        <div class="t-output">Cloning into 'AIVOX'... done.</div>
+        <div class="t-gap"></div>
+        <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd">pip install -r requirements.txt</span></div>
+        <div class="t-output">Successfully installed reportlab Pillow...</div>
+        <div class="t-gap"></div>
+        <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd">python scripts/check_aivox.py</span></div>
+        <div class="t-success">✅ AIVOX PRONTO — todos os checks passaram.</div>
+        <div class="t-gap"></div>
+        <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd">claude</span></div>
+        <div class="t-gap"></div>
+        <div class="t-line"><span class="t-prompt" style="color:#f0b429">›</span><span class="t-cmd">/play-aivox</span></div>
+        <div class="t-gap"></div>
+        <div class="t-success" style="color:#f0b429">CEO AIVOX: Bom dia! Sistema verificado.</div>
+        <div class="t-success" style="color:#f0b429">Me passa o portfólio da sua marca.</div>
+        <div class="t-gap"></div>
+        <div class="t-line"><span class="t-prompt">$</span><span class="t-cursor"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY -->
+<section id="why">
+  <div class="section-label reveal">Por que o AIVOX</div>
+  <h2 class="section-title reveal">Qualidade de agência.<br>Sem contratar agência.</h2>
+  <div class="why-grid">
+    <div class="why-card reveal">
+      <div class="why-icon">⚡</div>
+      <div class="why-title">Zero servidor. Zero custo fixo.</div>
+      <div class="why-text">Roda completamente dentro do Claude Code. Sem hospedagem, sem infraestrutura, sem taxa mensal de plataforma.</div>
+    </div>
+    <div class="why-card reveal">
+      <div class="why-icon">🎯</div>
+      <div class="why-title">Especialistas, não generalistas.</div>
+      <div class="why-text">Cada agente tem frameworks e metodologias específicas. O Copy Agent conhece Ogilvy. O Strategy Agent conhece Porter.</div>
+    </div>
+    <div class="why-card reveal">
+      <div class="why-icon">🔗</div>
+      <div class="why-title">Agentes em cadeia.</div>
+      <div class="why-text">PDF → Estratégia → Copy → Frontend. Fluxo automático entre agentes, resultado integrado e coerente.</div>
+    </div>
+    <div class="why-card reveal">
+      <div class="why-icon">🧠</div>
+      <div class="why-title">Memória persistente.</div>
+      <div class="why-text">O CEO Advisor lembra de tudo: briefing, identidade da marca, decisões. Cada sessão continua de onde parou.</div>
+    </div>
+    <div class="why-card reveal">
+      <div class="why-icon">🌐</div>
+      <div class="why-title">Portátil entre máquinas.</div>
+      <div class="why-text">Clone o repositório em qualquer computador, configure o .env e o AIVOX está rodando. Sem migração complexa.</div>
+    </div>
+    <div class="why-card reveal">
+      <div class="why-icon">🔒</div>
+      <div class="why-title">Seus dados, só seus.</div>
+      <div class="why-text">Tudo roda localmente. Nenhuma chave, nenhum briefing, nenhum arquivo enviado para servidores de terceiros.</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-label reveal">Planos</div>
+  <h2 class="section-title reveal">Escolha seu plano.<br>Comece hoje.</h2>
+
+  <div class="pricing-grid">
+
+    <!-- STARTER -->
+    <div class="pricing-card reveal">
+      <div class="plan-badge muted">Self-service</div>
+      <div class="plan-name">AIVOX PLUS</div>
+      <div class="plan-price">R$297</div>
+      <div class="plan-period">/ mês</div>
+      <hr class="plan-divider">
+      <ul class="plan-features">
+        <li>Todos os 8 agentes desbloqueados</li>
+        <li>Instala e configura com o guia passo a passo</li>
+        <li>Documentação completa + INSTALL.md</li>
+        <li>Atualizações incluídas</li>
+        <li>Suporte via comunidade</li>
+        <li class="muted-feat">Onboarding com o cofundador</li>
+        <li class="muted-feat">Configuração guiada ao vivo</li>
+        <li class="muted-feat">Treinamento prático no seu negócio</li>
+      </ul>
+      <a class="plan-cta outline" href="https://pay.cakto.com.br/hicm3gr" target="_blank">Começar com Plus →</a>
+    </div>
+
+    <!-- PRO -->
+    <div class="pricing-card featured reveal">
+      <div class="plan-badge green">Done-with-you</div>
+      <div class="plan-name">AIVOX ELITE</div>
+      <div class="plan-price">R$999</div>
+      <div class="plan-period">/ mês</div>
+      <hr class="plan-divider">
+      <ul class="plan-features">
+        <li>Todos os 8 agentes desbloqueados</li>
+        <li>Todos os 8 agentes desbloqueados</li>
+        <li><strong>Instalação completa do AIVOX</strong> feita pelo cofundador</li>
+        <li>Onboarding ao vivo — configuração da sua marca no sistema</li>
+        <li>Treinamento prático em cada agente</li>
+        <li>Acompanhamento até seu primeiro resultado concreto</li>
+        <li>Contato direto com o cofundador para dúvidas avulsas</li>
+        <li>Suporte via WhatsApp a combinar</li>
+        <li>Atualizações incluídas</li>
+      </ul>
+      <a class="plan-cta primary" href="https://pay.cakto.com.br/5oguw3v_816435" target="_blank">Ativar Elite agora →</a>
+    </div>
+
+    <!-- FOUNDER -->
+    <div class="pricing-card founder reveal">
+      <div class="plan-badge gold">Vitalício · Vagas Limitadas</div>
+      <div class="plan-name">AIVOX VITALÍCIO</div>
+      <div class="plan-price">R$14.997</div>
+      <div class="plan-period">pagamento único · vitalício · 3 instalações</div>
+      <hr class="plan-divider">
+      <ul class="plan-features">
+        <li>3 máquinas permanentes</li>
+        <li>Tudo que está no AIVOX Elite</li>
+        <li>Todos os 8 agentes desbloqueados para sempre</li>
+        <li>Todas as atualizações futuras incluídas</li>
+        <li>Suporte vitalício com o cofundador</li>
+        <li><strong>25% de comissão</strong> como afiliado oficial do AIVOX</li>
+        <li>Transforme seu acesso em fonte de renda recorrente</li>
+      </ul>
+      <a class="plan-cta gold-btn" href="https://pay.cakto.com.br/8ty864p" target="_blank">Garantir vaga Vitalício →</a>
+      <div class="founder-scarcity">
+        <div class="scarcity-bar-wrap"><div class="scarcity-bar" id="scarcityBar"></div></div>
+        <div class="scarcity-label" id="scarcityLabel">3 de 15 vagas preenchidas</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="pricing-note">Todos os planos requerem Claude Code Pro ou Max + chave OpenAI &nbsp;·&nbsp; Cancele quando quiser</div>
+</section>
+
+<!-- CTA FINAL -->
+<section id="cta">
+  <div class="cta-badge">Plus · Elite · Vitalício</div>
+  <h2 class="cta-headline">
+    Pronto para<br>
+    <span>ativar seu time?</span>
+  </h2>
+  <p class="cta-sub">No Starter você tem o sistema. No Pro, você tem o sistema e o cofundador do AIVOX do seu lado até funcionar.</p>
+  <a class="btn-primary large" href="#pricing">
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5L1.5 9h4.5v7.5h6V9H16.5L9 1.5z" fill="currentColor"/></svg>
+    Escolher meu plano
+  </a>
+  <div class="cta-note">
+    Requer Claude Code <a href="https://claude.ai/code" target="_blank">Pro ou Max</a>
+    &nbsp;·&nbsp; Cancele quando quiser
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo"><span>AI</span>VOX</div>
+  <div class="footer-links">
+    <a href="https://github.com/arthurr7070/AIVOX" target="_blank">GitHub</a>
+    <a href="https://github.com/arthurr7070/AIVOX/blob/master/INSTALL.md" target="_blank">Instalação</a>
+    <a href="https://github.com/arthurr7070/AIVOX/blob/master/AGENTS.md" target="_blank">Agentes</a>
+  </div>
+  <div class="footer-credit">Criado com AIVOX</div>
+</footer>
+
+<script>
+// ── CURSOR
+const cursor = document.getElementById('cursor');
+const ring   = document.getElementById('cursorRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+(function animCursor() {
+  cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+  rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+  ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+  requestAnimationFrame(animCursor);
+})();
+document.querySelectorAll('a, button').forEach(el => {
+  el.addEventListener('mouseenter', () => { cursor.style.width='18px'; cursor.style.height='18px'; ring.style.width='60px'; ring.style.height='60px'; });
+  el.addEventListener('mouseleave', () => { cursor.style.width='10px'; cursor.style.height='10px'; ring.style.width='36px'; ring.style.height='36px'; });
+});
+
+// ── FOUNDER SCARCITY BAR
+(function() {
+  const TOTAL = 15;
+  const FILLED = 3; // Atualizar manualmente conforme vagas forem vendidas
+  const bar   = document.getElementById('scarcityBar');
+  const label = document.getElementById('scarcityLabel');
+  if (bar && label) {
+    const pct = Math.round((FILLED / TOTAL) * 100);
+    bar.style.width = pct + '%';
+    const restantes = TOTAL - FILLED;
+    label.textContent = restantes + ' de ' + TOTAL + ' vagas disponíveis';
+  }
+})();
+
+// ── SCROLL REVEALS
+const observer = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 70);
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── NAV SCROLL
+const nav = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 60) {
+    nav.style.backdropFilter = 'blur(20px)';
+    nav.style.background = 'rgba(6,6,8,0.92)';
+  } else {
+    nav.style.backdropFilter = 'none';
+    nav.style.background = 'linear-gradient(to bottom, rgba(6,6,8,0.95), transparent)';
+  }
+});
+</script>
+
+<!-- AIVOX — Criado com AIVOX -->
+</body>
+</html>
