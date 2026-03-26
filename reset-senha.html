@@ -685,7 +685,7 @@
     </div>
 
     <!-- FORMULÁRIO NOVA SENHA -->
-    <div id="form-reset">
+    <div id="form-reset" style="display:none;">
       <div class="form-icone">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5CFFA8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -833,25 +833,23 @@ desenhar()
 let tokenValido = false
 
 sb.auth.onAuthStateChange((event, session) => {
-  ocultarLoading()
   if (event === 'PASSWORD_RECOVERY') {
     tokenValido = true
+    ocultarLoading()
     document.getElementById('form-reset').style.display = 'block'
     document.getElementById('estado-invalido').style.display = 'none'
-  } else if (event === 'SIGNED_IN' && !tokenValido) {
-    // Já logado normalmente, não é recovery
-    window.location.href = 'dashboard.html'
   }
+  // Ignora SIGNED_IN — pode vir junto com PASSWORD_RECOVERY
 })
 
-// Timeout: se não disparar o evento em 3s, token inválido
+// Timeout: se não disparar PASSWORD_RECOVERY em 5s, token inválido
 setTimeout(() => {
   if (!tokenValido) {
     ocultarLoading()
     document.getElementById('form-reset').style.display = 'none'
     document.getElementById('estado-invalido').style.display = 'block'
   }
-}, 3000)
+}, 5000)
 
 function ocultarLoading() {
   const overlay = document.getElementById('loading-overlay')
@@ -967,8 +965,12 @@ btnSalvar.addEventListener('click', async () => {
 
   if (error) {
     const el = document.getElementById('msg-erro')
-    el.textContent = 'Não foi possível redefinir a senha. Tente solicitar um novo link.'
-    el.style.display = 'block'
+    let msg = 'Não foi possível redefinir a senha. Tente solicitar um novo link.'
+    if (error.message.includes('Password should')) msg = 'A senha precisa ter pelo menos 6 caracteres.'
+    if (error.message.includes('same password'))   msg = 'A nova senha não pode ser igual à anterior.'
+    if (error.message.includes('session'))         msg = 'Sessão expirada. Solicite um novo link de recuperação.'
+    el.textContent    = msg
+    el.style.display  = 'block'
     btnSalvar.disabled    = false
     btnSalvar.textContent = 'Salvar nova senha'
   } else {
