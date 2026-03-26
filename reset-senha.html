@@ -853,6 +853,7 @@ setTimeout(() => {
 
 function ocultarLoading() {
   const overlay = document.getElementById('loading-overlay')
+  if (!overlay) return
   overlay.classList.add('saindo')
   setTimeout(() => overlay.remove(), 400)
 }
