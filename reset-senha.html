@@ -851,7 +851,10 @@ setTimeout(() => {
   }
 }, 5000)
 
+let loadingOculto = false
 function ocultarLoading() {
+  if (loadingOculto) return
+  loadingOculto = true
   const overlay = document.getElementById('loading-overlay')
   if (!overlay) return
   overlay.classList.add('saindo')
