@@ -961,15 +961,16 @@ btnSalvar.addEventListener('click', async () => {
   btnSalvar.disabled    = true
   btnSalvar.textContent = 'Salvando...'
 
+  // Verifica sessão ativa antes de tentar
+  const { data: { session: sessaoAtual } } = await sb.auth.getSession()
+  console.log('Sessão antes do updateUser:', sessaoAtual)
+
   const { error } = await sb.auth.updateUser({ password: nova })
+  console.log('Erro updateUser:', error)
 
   if (error) {
     const el = document.getElementById('msg-erro')
-    let msg = 'Não foi possível redefinir a senha. Tente solicitar um novo link.'
-    if (error.message.includes('Password should')) msg = 'A senha precisa ter pelo menos 6 caracteres.'
-    if (error.message.includes('same password'))   msg = 'A nova senha não pode ser igual à anterior.'
-    if (error.message.includes('session'))         msg = 'Sessão expirada. Solicite um novo link de recuperação.'
-    el.textContent    = msg
+    el.textContent    = 'Erro: ' + error.message
     el.style.display  = 'block'
     btnSalvar.disabled    = false
     btnSalvar.textContent = 'Salvar nova senha'
