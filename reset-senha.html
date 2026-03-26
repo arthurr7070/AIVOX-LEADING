@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<!-- AIVOX | Desenvolvido com o sistema AIVOX -->
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redefinir Senha · AIVOX CONTROL</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --verde:  #5CFFA8;
+      --preto:  #060A0E;
+      --painel: #0C1117;
+      --borda:  #1A2330;
+      --texto:  #8FA3B0;
+      --branco: #EEF4F8;
+      --glow:   rgba(92,255,168,0.15);
+      --erro:   #FF4D6A;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--preto);
+      font-family: 'DM Sans', sans-serif;
+      display: flex;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── PAINEL ESQUERDO ─────────────────────────── */
+    .lado-esquerdo {
+      flex: 1.1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 48px 56px;
+      overflow: hidden;
+      border-right: 1px solid var(--borda);
+    }
+
+    #canvas-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.6;
+    }
+
+    .glow-central {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(92,255,168,0.07) 0%, transparent 65%);
+      pointer-events: none;
+      animation: pulsar 4s ease-in-out infinite;
+    }
+
+    @keyframes pulsar {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+      50%       { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+    }
+
+    .noise {
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      opacity: 0.4;
+    }
+
+    .linha-deco {
+      position: absolute;
+      top: 0; bottom: 0; right: 0;
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, var(--verde), transparent);
+      opacity: 0.3;
+    }
+
+    .esq-topo { position: relative; z-index: 2; }
+    .esq-meio  { position: relative; z-index: 2; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .esq-base  { position: relative; z-index: 2; }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      color: var(--branco);
+      line-height: 1;
+    }
+    .logo .logo-linha1 { font-size: 26px; display: block; letter-spacing: -0.5px; }
+    .logo span { color: var(--verde); }
+    .logo .logo-linha2 {
+      display: block;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: var(--verde);
+      padding-left: 1.08em;
+      margin-top: 4px;
+      opacity: 0.75;
+    }
+
+    /* Ícone central esquerdo */
+    .icone-central {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+
+    .icone-ring {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 1px solid rgba(92,255,168,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      animation: rotarRing 8s linear infinite;
+    }
+
+    .icone-ring::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 1px dashed rgba(92,255,168,0.1);
+    }
+
+    @keyframes rotarRing {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    .icone-ring svg {
+      animation: rotarRing 8s linear infinite reverse;
+    }
+
+    .texto-central {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(28px, 3vw, 38px);
+      font-weight: 800;
+      color: var(--branco);
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+
+    .texto-central .destaque { color: var(--verde); }
+
+    .texto-descricao {
+      font-size: 15px;
+      color: var(--texto);
+      line-height: 1.65;
+      max-width: 400px;
+    }
+
+    .steps-lista {
+      margin-top: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      animation: entrarStep 0.6s ease both;
+    }
+
+    .step-item:nth-child(1) { animation-delay: 0.1s; }
+    .step-item:nth-child(2) { animation-delay: 0.25s; }
+    .step-item:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes entrarStep {
+      from { opacity: 0; transform: translateX(-12px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .step-num {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: rgba(92,255,168,0.08);
+      border: 1px solid rgba(92,255,168,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--verde);
+      flex-shrink: 0;
+    }
+
+    .step-txt {
+      font-size: 13px;
+      color: var(--texto);
+    }
+
+    .step-txt strong {
+      color: var(--branco);
+      font-weight: 500;
+    }
+
+    .stats-linha {
+      display: flex;
+      gap: 32px;
+      padding-top: 32px;
+      border-top: 1px solid var(--borda);
+    }
+
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--verde);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-desc {
+      font-size: 11px;
+      color: var(--texto);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── PAINEL DIREITO ──────────────────────────── */
+    .lado-direito {
+      width: 440px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 40px;
+      background: var(--painel);
+      position: relative;
+    }
+
+    .lado-direito::before {
+      content: '';
+      position: absolute;
+      top: -80px; left: -80px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .form-box {
+      width: 100%;
+      max-width: 360px;
+      position: relative;
+      z-index: 1;
+      animation: entrarForm 0.7s ease both;
+    }
+
+    @keyframes entrarForm {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Badge */
+    .form-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(92,255,168,0.08);
+      border: 1px solid rgba(92,255,168,0.2);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      color: var(--verde);
+      font-weight: 500;
+      margin-bottom: 28px;
+    }
+
+    .badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--verde);
+      animation: piscar 1.5s ease-in-out infinite;
+    }
+
+    @keyframes piscar {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.2; }
+    }
+
+    /* Ícone do form */
+    .form-icone {
+      width: 52px; height: 52px;
+      border-radius: 16px;
+      background: rgba(92,255,168,0.08);
+      border: 1px solid rgba(92,255,168,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .form-titulo {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--branco);
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+    }
+
+    .form-sub {
+      font-size: 14px;
+      color: var(--texto);
+      margin-bottom: 32px;
+      line-height: 1.55;
+    }
+
+    /* Campo */
+    .campo { margin-bottom: 18px; }
+
+    .campo label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--texto);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .campo input {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--borda);
+      border-radius: 12px;
+      padding: 14px 48px 14px 18px;
+      color: var(--branco);
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    }
+
+    .campo input:focus {
+      border-color: var(--verde);
+      background: rgba(92,255,168,0.04);
+      box-shadow: 0 0 0 3px rgba(92,255,168,0.08);
+    }
+
+    .campo input::placeholder { color: rgba(143,163,176,0.4); }
+
+    .toggle-senha {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: var(--texto);
+      opacity: 0.5;
+      transition: opacity 0.2s;
+      background: none;
+      border: none;
+      padding: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .toggle-senha:hover { opacity: 1; }
+
+    /* Indicador de força */
+    .forca-wrap {
+      margin-top: 10px;
+    }
+
+    .forca-barra {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+
+    .forca-seg {
+      height: 3px;
+      flex: 1;
+      border-radius: 2px;
+      background: var(--borda);
+      transition: background 0.3s;
+    }
+
+    .forca-seg.fraca   { background: #FF4D6A; }
+    .forca-seg.media   { background: #FFB547; }
+    .forca-seg.forte   { background: var(--verde); }
+
+    .forca-txt {
+      font-size: 11px;
+      color: var(--texto);
+      transition: color 0.3s;
+    }
+
+    .forca-txt.fraca { color: #FF4D6A; }
+    .forca-txt.media { color: #FFB547; }
+    .forca-txt.forte { color: var(--verde); }
+
+    /* Checklist de requisitos */
+    .req-lista {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .req-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: rgba(143,163,176,0.5);
+      transition: color 0.2s;
+    }
+
+    .req-item.ok { color: var(--verde); }
+
+    .req-icone {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      border: 1px solid currentColor;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+
+    .req-item.ok .req-icone {
+      background: rgba(92,255,168,0.15);
+    }
+
+    /* Botão */
+    .btn-salvar {
+      width: 100%;
+      background: var(--verde);
+      color: #060A0E;
+      border: none;
+      border-radius: 12px;
+      padding: 15px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      cursor: pointer;
+      margin-top: 24px;
+      position: relative;
+      overflow: hidden;
+      transition: opacity 0.2s, transform 0.15s;
+      letter-spacing: 0.3px;
+    }
+
+    .btn-salvar::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+    }
+
+    .btn-salvar:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+    .btn-salvar:active:not(:disabled) { transform: translateY(0); }
+    .btn-salvar:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+    /* Mensagens */
+    .msg-erro {
+      background: rgba(255,77,106,0.08);
+      border: 1px solid rgba(255,77,106,0.25);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--erro);
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .msg-ok {
+      background: rgba(92,255,168,0.06);
+      border: 1px solid rgba(92,255,168,0.2);
+      border-radius: 10px;
+      padding: 16px;
+      color: var(--verde);
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .msg-ok .ok-titulo {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .msg-ok .ok-desc {
+      color: var(--texto);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    /* Estado: token inválido */
+    .estado-invalido {
+      text-align: center;
+      display: none;
+    }
+
+    .invalido-icone {
+      width: 64px; height: 64px;
+      border-radius: 20px;
+      background: rgba(255,77,106,0.08);
+      border: 1px solid rgba(255,77,106,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+
+    .invalido-titulo {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--branco);
+      margin-bottom: 10px;
+    }
+
+    .invalido-desc {
+      font-size: 14px;
+      color: var(--texto);
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .btn-voltar {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--borda);
+      border-radius: 10px;
+      padding: 12px 22px;
+      color: var(--branco);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .btn-voltar:hover {
+      border-color: rgba(92,255,168,0.3);
+      background: rgba(92,255,168,0.04);
+    }
+
+    /* Rodapé */
+    .form-rodape {
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid var(--borda);
+      font-size: 11px;
+      color: rgba(143,163,176,0.35);
+      text-align: center;
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--preto);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: opacity 0.4s;
+    }
+
+    .loading-overlay.saindo {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loader-ring {
+      width: 40px; height: 40px;
+      border: 2px solid var(--borda);
+      border-top-color: var(--verde);
+      border-radius: 50%;
+      animation: girar 0.8s linear infinite;
+    }
+
+    @keyframes girar {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsivo */
+    @media (max-width: 860px) {
+      .lado-esquerdo { display: none; }
+      .lado-direito  { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading inicial -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loader-ring"></div>
+</div>
+
+<!-- ── PAINEL ESQUERDO ─────────────────────────────────── -->
+<div class="lado-esquerdo">
+  <canvas id="canvas-bg"></canvas>
+  <div class="glow-central"></div>
+  <div class="noise"></div>
+  <div class="linha-deco"></div>
+
+  <div class="esq-topo">
+    <div class="logo">
+      <span class="logo-linha1">AI<span>VOX</span></span>
+      <span class="logo-linha2">CONTROL</span>
+    </div>
+  </div>
+
+  <div class="esq-meio">
+    <div class="texto-central">
+      Redefinindo<br>acesso com <span class="destaque">segurança.</span>
+    </div>
+    <p class="texto-descricao">
+      Crie uma senha forte para proteger sua conta e continuar usando todos os agentes do AIVOX.
+    </p>
+
+    <div class="steps-lista">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-txt"><strong>Digite sua nova senha</strong> — mínimo 8 caracteres</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-txt"><strong>Confirme a senha</strong> — garante que você digitou corretamente</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-txt"><strong>Acesse o painel</strong> — você será redirecionado automaticamente</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="esq-base">
+    <div class="stats-linha">
+      <div class="stat-item">
+        <div class="stat-num">256</div>
+        <div class="stat-desc">Bit encryption</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">JWT</div>
+        <div class="stat-desc">Token seguro</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">1x</div>
+        <div class="stat-desc">Uso único</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PAINEL DIREITO ──────────────────────────────────── -->
+<div class="lado-direito">
+  <div class="form-box">
+
+    <div class="form-badge">
+      <div class="badge-dot"></div>
+      REDEFINIÇÃO SEGURA
+    </div>
+
+    <!-- FORMULÁRIO NOVA SENHA -->
+    <div id="form-reset">
+      <div class="form-icone">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5CFFA8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+
+      <div class="form-titulo">Nova senha</div>
+      <div class="form-sub">Escolha uma senha segura para sua conta AIVOX.</div>
+
+      <div class="msg-erro" id="msg-erro"></div>
+      <div class="msg-ok"   id="msg-ok">
+        <div class="ok-titulo">Senha redefinida!</div>
+        <div class="ok-desc">Sua nova senha foi salva. Redirecionando para o painel...</div>
+      </div>
+
+      <div class="campo">
+        <label>Nova senha</label>
+        <div class="input-wrap">
+          <input type="password" id="nova-senha" placeholder="Mínimo 8 caracteres" autocomplete="new-password" />
+          <button class="toggle-senha" type="button" onclick="toggleSenha('nova-senha', this)" tabindex="-1">
+            <svg id="eye-nova" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="forca-wrap">
+          <div class="forca-barra">
+            <div class="forca-seg" id="f1"></div>
+            <div class="forca-seg" id="f2"></div>
+            <div class="forca-seg" id="f3"></div>
+            <div class="forca-seg" id="f4"></div>
+          </div>
+          <div class="forca-txt" id="forca-txt">Digite uma senha</div>
+        </div>
+        <div class="req-lista">
+          <div class="req-item" id="req-tam">
+            <div class="req-icone">
+              <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            Mínimo 8 caracteres
+          </div>
+          <div class="req-item" id="req-num">
+            <div class="req-icone">
+              <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            Pelo menos 1 número
+          </div>
+          <div class="req-item" id="req-mai">
+            <div class="req-icone">
+              <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            Pelo menos 1 letra maiúscula
+          </div>
+        </div>
+      </div>
+
+      <div class="campo" style="margin-top:8px;">
+        <label>Confirmar nova senha</label>
+        <div class="input-wrap">
+          <input type="password" id="conf-senha" placeholder="Repita a senha" autocomplete="new-password" />
+          <button class="toggle-senha" type="button" onclick="toggleSenha('conf-senha', this)" tabindex="-1">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <button class="btn-salvar" id="btn-salvar" disabled>Salvar nova senha</button>
+    </div>
+
+    <!-- ESTADO: TOKEN INVÁLIDO / EXPIRADO -->
+    <div class="estado-invalido" id="estado-invalido">
+      <div class="invalido-icone">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF4D6A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <div class="invalido-titulo">Link expirado</div>
+      <p class="invalido-desc">
+        Este link de redefinição já foi usado ou expirou.<br>
+        Solicite um novo link pelo portal.
+      </p>
+      <a href="index.html" class="btn-voltar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Voltar ao login
+      </a>
+    </div>
+
+    <div class="form-rodape">AIVOX CONTROL · Redefinição segura de senha</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+// ── CONFIG SUPABASE ─────────────────────────────────────────
+const SUPABASE_URL  = 'https://qwgvorkwpejamcaxjjkb.supabase.co'
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3Z3Zvcmt3cGVqYW1jYXhqamtiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjc0MDUsImV4cCI6MjA4OTgwMzQwNX0.HqQKAD_wxFFlWc92sFjWqRnz5rQgiXcUGtc6p2s5Tzc'
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+
+// ── CANVAS PARTÍCULAS ───────────────────────────────────────
+const canvas = document.getElementById('canvas-bg')
+const ctx    = canvas.getContext('2d')
+let nos = [], W, H
+
+function resize() {
+  W = canvas.width  = canvas.offsetWidth
+  H = canvas.height = canvas.offsetHeight
+  nos = Array.from({ length: 45 }, () => ({
+    x: Math.random() * W, y: Math.random() * H,
+    vx: (Math.random() - 0.5) * 0.35, vy: (Math.random() - 0.5) * 0.35,
+    r: Math.random() * 2 + 1,
+  }))
+}
+
+function desenhar() {
+  ctx.clearRect(0, 0, W, H)
+  for (let i = 0; i < nos.length; i++) {
+    for (let j = i + 1; j < nos.length; j++) {
+      const dx = nos[i].x - nos[j].x, dy = nos[i].y - nos[j].y
+      const d  = Math.sqrt(dx*dx + dy*dy)
+      if (d < 130) {
+        ctx.beginPath()
+        ctx.moveTo(nos[i].x, nos[i].y)
+        ctx.lineTo(nos[j].x, nos[j].y)
+        ctx.strokeStyle = `rgba(92,255,168,${0.12*(1-d/130)})`
+        ctx.lineWidth   = 0.8
+        ctx.stroke()
+      }
+    }
+  }
+  nos.forEach(n => {
+    ctx.beginPath()
+    ctx.arc(n.x, n.y, n.r, 0, Math.PI*2)
+    ctx.fillStyle = 'rgba(92,255,168,0.5)'
+    ctx.fill()
+    n.x += n.vx; n.y += n.vy
+    if (n.x < 0 || n.x > W) n.vx *= -1
+    if (n.y < 0 || n.y > H) n.vy *= -1
+  })
+  requestAnimationFrame(desenhar)
+}
+
+window.addEventListener('resize', resize)
+resize()
+desenhar()
+
+// ── DETECÇÃO DE TOKEN ───────────────────────────────────────
+let tokenValido = false
+
+sb.auth.onAuthStateChange((event, session) => {
+  ocultarLoading()
+  if (event === 'PASSWORD_RECOVERY') {
+    tokenValido = true
+    document.getElementById('form-reset').style.display = 'block'
+    document.getElementById('estado-invalido').style.display = 'none'
+  } else if (event === 'SIGNED_IN' && !tokenValido) {
+    // Já logado normalmente, não é recovery
+    window.location.href = 'dashboard.html'
+  }
+})
+
+// Timeout: se não disparar o evento em 3s, token inválido
+setTimeout(() => {
+  if (!tokenValido) {
+    ocultarLoading()
+    document.getElementById('form-reset').style.display = 'none'
+    document.getElementById('estado-invalido').style.display = 'block'
+  }
+}, 3000)
+
+function ocultarLoading() {
+  const overlay = document.getElementById('loading-overlay')
+  overlay.classList.add('saindo')
+  setTimeout(() => overlay.remove(), 400)
+}
+
+// ── TOGGLE VISIBILIDADE SENHA ───────────────────────────────
+function toggleSenha(inputId, btn) {
+  const input = document.getElementById(inputId)
+  const tipo  = input.type === 'password' ? 'text' : 'password'
+  input.type  = tipo
+  btn.innerHTML = tipo === 'text'
+    ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+    : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
+}
+
+// ── FORÇA DA SENHA ──────────────────────────────────────────
+function calcularForca(senha) {
+  let pts = 0
+  if (senha.length >= 8)  pts++
+  if (senha.length >= 12) pts++
+  if (/[0-9]/.test(senha)) pts++
+  if (/[A-Z]/.test(senha)) pts++
+  if (/[^a-zA-Z0-9]/.test(senha)) pts++
+  return pts
+}
+
+function atualizarForca(senha) {
+  const segs = ['f1','f2','f3','f4']
+  const pts  = calcularForca(senha)
+
+  let nivel, label
+  if (!senha) {
+    nivel = 0; label = 'Digite uma senha'
+  } else if (pts <= 1) {
+    nivel = 1; label = 'Fraca'
+  } else if (pts <= 2) {
+    nivel = 2; label = 'Razoável'
+  } else if (pts <= 3) {
+    nivel = 3; label = 'Boa'
+  } else {
+    nivel = 4; label = 'Forte'
+  }
+
+  const cls = nivel <= 1 ? 'fraca' : nivel <= 2 ? 'media' : 'forte'
+  const txtEl = document.getElementById('forca-txt')
+  txtEl.textContent = label
+  txtEl.className   = `forca-txt${senha ? ' ' + cls : ''}`
+
+  segs.forEach((id, i) => {
+    const el = document.getElementById(id)
+    el.className = 'forca-seg'
+    if (i < nivel) el.classList.add(cls)
+  })
+}
+
+function atualizarRequisitos(senha) {
+  const reqTam = document.getElementById('req-tam')
+  const reqNum = document.getElementById('req-num')
+  const reqMai = document.getElementById('req-mai')
+
+  reqTam.classList.toggle('ok', senha.length >= 8)
+  reqNum.classList.toggle('ok', /[0-9]/.test(senha))
+  reqMai.classList.toggle('ok', /[A-Z]/.test(senha))
+}
+
+// ── VALIDAÇÃO EM TEMPO REAL ─────────────────────────────────
+const inputNova = document.getElementById('nova-senha')
+const inputConf = document.getElementById('conf-senha')
+const btnSalvar = document.getElementById('btn-salvar')
+
+function validar() {
+  const nova = inputNova.value
+  const conf = inputConf.value
+  const ok   = nova.length >= 8 && nova === conf
+  btnSalvar.disabled = !ok
+
+  if (conf && nova !== conf) {
+    inputConf.style.borderColor = 'rgba(255,77,106,0.5)'
+  } else if (conf && nova === conf) {
+    inputConf.style.borderColor = 'rgba(92,255,168,0.5)'
+  } else {
+    inputConf.style.borderColor = ''
+  }
+}
+
+inputNova.addEventListener('input', () => {
+  atualizarForca(inputNova.value)
+  atualizarRequisitos(inputNova.value)
+  validar()
+})
+
+inputConf.addEventListener('input', validar)
+
+// Enter para salvar
+inputConf.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !btnSalvar.disabled) btnSalvar.click()
+})
+
+// ── SALVAR NOVA SENHA ───────────────────────────────────────
+btnSalvar.addEventListener('click', async () => {
+  const nova = inputNova.value
+
+  // Esconde mensagens anteriores
+  document.getElementById('msg-erro').style.display = 'none'
+  document.getElementById('msg-ok').style.display   = 'none'
+
+  btnSalvar.disabled    = true
+  btnSalvar.textContent = 'Salvando...'
+
+  const { error } = await sb.auth.updateUser({ password: nova })
+
+  if (error) {
+    const el = document.getElementById('msg-erro')
+    el.textContent = 'Não foi possível redefinir a senha. Tente solicitar um novo link.'
+    el.style.display = 'block'
+    btnSalvar.disabled    = false
+    btnSalvar.textContent = 'Salvar nova senha'
+  } else {
+    document.getElementById('msg-ok').style.display = 'block'
+    btnSalvar.textContent = 'Senha salva!'
+
+    // Campos desabilitados
+    inputNova.disabled = true
+    inputConf.disabled = true
+
+    // Redireciona após 2s
+    setTimeout(() => {
+      window.location.href = 'dashboard.html'
+    }, 2000)
+  }
+})
+</script>
+</body>
+</html>
