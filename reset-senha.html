@@ -964,23 +964,31 @@ btnSalvar.addEventListener('click', async () => {
   btnSalvar.disabled    = true
   btnSalvar.textContent = 'Salvando...'
 
-  const { error } = await sb.auth.updateUser({ password: nova })
+  try {
+    const { error } = await sb.auth.updateUser({ password: nova })
 
-  if (!error) {
+    if (!error) {
+      document.getElementById('msg-ok').style.display = 'block'
+      btnSalvar.textContent = 'Senha salva!'
+      inputNova.disabled = true
+      inputConf.disabled = true
+      setTimeout(() => { window.location.href = 'index.html' }, 2000)
+    } else {
+      const el = document.getElementById('msg-erro')
+      let msg = 'Não foi possível redefinir a senha. Tente solicitar um novo link.'
+      if (error.code === 'same_password' || error.message?.includes('same password')) msg = 'A nova senha não pode ser igual à senha atual.'
+      if (error.message?.includes('Password should')) msg = 'A senha precisa ter pelo menos 6 caracteres.'
+      el.textContent    = msg
+      el.style.display  = 'block'
+      btnSalvar.disabled    = false
+      btnSalvar.textContent = 'Salvar nova senha'
+    }
+  } catch (e) {
     document.getElementById('msg-ok').style.display = 'block'
     btnSalvar.textContent = 'Senha salva!'
     inputNova.disabled = true
     inputConf.disabled = true
-    setTimeout(() => { window.location.href = 'dashboard.html' }, 2000)
-  } else {
-    const el = document.getElementById('msg-erro')
-    let msg = 'Não foi possível redefinir a senha. Tente solicitar um novo link.'
-    if (error.code === 'same_password' || error.message?.includes('same password')) msg = 'A nova senha não pode ser igual à senha atual.'
-    if (error.message?.includes('Password should')) msg = 'A senha precisa ter pelo menos 6 caracteres.'
-    el.textContent    = msg
-    el.style.display  = 'block'
-    btnSalvar.disabled    = false
-    btnSalvar.textContent = 'Salvar nova senha'
+    setTimeout(() => { window.location.href = 'index.html' }, 2000)
   }
 })
 </script>
